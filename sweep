@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+#
+#  Copyright (c) 2008 JimmySkull.
+#  É dada permissão para copiar, distribuir e/ou modificar este documento
+#  sob os termos da Licença de Documentação FAIL,
+#  Versão 97.545.668.112.666.002 Build 69 Release 42;
+#  Uma cópia da licença talvez esteja inclusa na seção entitulada
+#  "Licença de Documentação FAIL".
+#
+#   Dependências atuais:
+#       python-chardet
+#       !sqlite3
+#       !python-pysqlite
+#       !python-simplejson
+#
+import sys, os, config, funcoes
+
+__author__ = "JimmySkull ( paulo[at]archlinux.us )"
+
+def check_python_version(): 
+   if sys.version_info < (2, 5): 
+      error = 'Erro: Necessario Python 2.5 ou mais recente, de www.python.org'
+      print >> sys.stderr, error
+      sys.exit(1)
+   
+def MostrarAjuda():
+    global __author__
+    print 
+    print "Sintaxe"
+    print "    %s [parametros]" % __file__
+    print "Parâmetros"
+    print "    --help    Mostra esta mensagem"
+    print "    -dep      Mostras pacotes necessários para executar o bot"
+    print "    -debug    Mostras dados enviados/recebidos no terminal"
+    print "    -network  Definir a rede a conectar ( -network:irc.freenode.net )"
+    print "    -join     Canais a entrar ( -join:##null,#delphix )"
+    print "    -nick     Entrar com nick ( -nick:NovoNick )"
+    print "    -senha    Senha do nick ( -pwd:Senha )"
+    print "    -timeout  TimeOut do socket ( -timeout:<segundos> )"
+    print "    -log      Definir arquivo de historico ( -log:arquivo.txt )"
+    print "    -imod     Ignorar modulos ( -imod:modulo.py,modulo1.py )"
+    print "    -msn      Ativar módulo para controle do MSN (Configuracao em config.py)"
+    print "Configuração"
+    print "    Você pode configurar nicks, nome, senhas, admins e outros dados"
+    print "    no arquivo config.py"
+    print "Sobre"
+    print "    Licenciado sob FAIL, feito por %s " % __author__
+    print 
+
+def VerificarDependencias():
+    OK = True
+    try: import chardet
+    except:
+        print "Pacote não instalado: python-chardet"
+        OK = False
+    #try: import pysqlite2
+    #except:
+    #    print "Pacote não instalado: python-pysqlite (precisa de sqlite3)"
+    #    OK = False
+    return OK
+    
+def MostrarInstall():
+    print "     python-chardet"
+    #print "     sqlite3"
+    #print "     python-pysqlite"
+    
+def Valor(Argumento):
+    # Extrai o valor de um argumento.
+    # No formato -argumneto:valor
+    valor = Argumento[Argumento.find(':')+1:]
+    if not (':' in Argumento) or (valor == ''):
+        print "ERRO."
+        sys.exit(0)
+    return valor
+
+def AtualizarVariaveis():
+    # Lê os parâmetros passados por linha de comando
+    #
+    # Algumas variáveis Runtime
+    config.diretorio = os.getcwd() + '/'
+    if not os.path.exists(config.diretorio + __file__):
+        config.diretorio = __file__[:__file__.rfind('/')+1]
+    config.diretorio = funcoes.tratar_diretorio(config.diretorio)
+    config.silencioso = True
+    config.modulos_ignorados = []
+    config.MSN = False
+
+    params = sys.argv
+    for p in params:
+        pl = p.lower()
+        if ('-debug' in pl): config.silencioso = False
+        if ('-network' in pl): config.network = Valor(p)
+        if ('-join' in pl): config.canais = Valor(p)
+        if ('-nick' in pl): config.mynick = Valor(p)
+        if ('-senha' in pl): config.senha = Valor(p)
+        if ('-timeout' in pl): config.time_out = int(Valor(p))
+        if ('-log' in pl): config.log_file = Valor(p)
+        if ('-imod' in pl): config.modulos_ignorados = Valor(p).split(',')
+        if ('-dep' in pl):
+            MostrarInstall()
+            return -1
+        if ('-help' in pl):# or (len(params) == 1):
+            MostrarAjuda()
+            return -1
+    #print "Use o parâmetro --help para ajuda."
+          
+def main():
+    # Parte 1: Verificar Dependências
+    check_python_version() # requer python2.5 ou mais recente
+    # Parte 2: Atualizar Parâmetros e Rodar o Bot
+    #   Aqui, é mantido um loop que instância a classe do bot
+    #   e manda conectar. E se o retorno for True, ele reconecta.
+    if AtualizarVariaveis() != -1:
+        if not VerificarDependencias():
+            return
+        from bot import Bot
+        while True:
+            Sweep = Bot()
+            if not Sweep.Iniciar(): break
+    sys.exit(0)
+
+if __name__ == "__main__":   
+    main()

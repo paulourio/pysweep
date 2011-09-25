@@ -1,0 +1,19 @@
+Sweep 1.4.5
+
+Dependencies:
+    python
+    python-chardet
+    
+Examples:
+
+Connect on irc.freenode.net with nick Doritao, and join in ##null channel
+./sweep -network:irc.freenode.net -nick:Doritao -join:##null -log:sessoes/freenode.txt
+
+Connect on MSN (to configure you need to open the file ./modulos/msn.py and edit)
+./sweep -msn -log:sessoes/msn.txt
+
+The show the input/output messages
+./sweep -network:irc.freenode.net -debug
+
+
+Oh, you can configure the bot, editing the config.py file :)
